@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import type { LanguageCode, TemplateId } from '../../types/cv';
+import type { CoverLetterTemplateId } from '../../types/coverLetter';
 import { translations } from '../../data/translations';
 import { TEMPLATES_CONFIG } from '../../types/auth';
+import { COVER_LETTER_TEMPLATES_CONFIG } from '../../types/coverLetter';
 import { useAuth } from '../../context/AuthContext';
 import { Crown, Sparkles, X, Check, QrCode, CreditCard, Zap } from 'lucide-react';
 
@@ -9,6 +11,7 @@ interface UpgradeModalProps {
   isOpen: boolean;
   language: LanguageCode;
   selectedTemplateId?: TemplateId;
+  selectedCoverLetterTemplateId?: CoverLetterTemplateId;
   onClose: () => void;
 }
 
@@ -16,9 +19,10 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
   isOpen,
   language,
   selectedTemplateId,
+  selectedCoverLetterTemplateId,
   onClose,
 }) => {
-  const { unlockSingleTemplate, upgradeToLifetimePro } = useAuth();
+  const { unlockSingleTemplate, unlockSingleCoverLetterTemplate, upgradeToLifetimePro } = useAuth();
   const [purchaseType, setPurchaseType] = useState<'lifetime' | 'single'>('lifetime');
   const [paymentMethod, setPaymentMethod] = useState<'khqr' | 'card'>('khqr');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -29,15 +33,19 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
 
   if (!isOpen) return null;
 
-  const targetTemplate = TEMPLATES_CONFIG.find((t) => t.id === selectedTemplateId) || TEMPLATES_CONFIG[2];
+  const targetCvTemplate = TEMPLATES_CONFIG.find((t) => t.id === selectedTemplateId) || TEMPLATES_CONFIG[2];
+  const targetClTemplate = COVER_LETTER_TEMPLATES_CONFIG.find((t) => t.id === selectedCoverLetterTemplateId);
+  const targetTemplate = targetClTemplate || targetCvTemplate;
 
   const handlePay = () => {
     setIsProcessing(true);
     setTimeout(() => {
       if (purchaseType === 'lifetime') {
         upgradeToLifetimePro();
+      } else if (selectedCoverLetterTemplateId && targetClTemplate) {
+        unlockSingleCoverLetterTemplate(targetClTemplate.id);
       } else {
-        unlockSingleTemplate(targetTemplate.id);
+        unlockSingleTemplate(targetCvTemplate.id);
       }
       setIsProcessing(false);
       setIsSuccess(true);
