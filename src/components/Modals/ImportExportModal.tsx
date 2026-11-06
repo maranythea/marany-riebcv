@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { CvData, CvSettings, LanguageCode } from '../../types/cv';
+import type { CoverLetterData, CoverLetterSettings } from '../../types/coverLetter';
 import { Upload, RotateCcw, X, Download, FileJson } from 'lucide-react';
 
 interface ImportExportModalProps {
@@ -7,8 +8,11 @@ interface ImportExportModalProps {
   language: LanguageCode;
   data: CvData;
   settings: CvSettings;
+  coverLetterData?: CoverLetterData;
+  coverLetterSettings?: CoverLetterSettings;
   onClose: () => void;
   onImport: (data: CvData, settings?: Partial<CvSettings>) => void;
+  onImportCoverLetter?: (data: CoverLetterData, settings?: Partial<CoverLetterSettings>) => void;
   onReset: () => void;
 }
 
@@ -17,8 +21,11 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
   language,
   data,
   settings,
+  coverLetterData,
+  coverLetterSettings,
   onClose,
   onImport,
+  onImportCoverLetter,
   onReset,
 }) => {
   const [jsonInput, setJsonInput] = useState('');
@@ -29,10 +36,12 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
 
   const handleDownloadJson = () => {
     const backup = {
-      version: '1.0',
+      version: '1.2',
       timestamp: new Date().toISOString(),
       data,
       settings,
+      coverLetterData,
+      coverLetterSettings,
     };
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -50,6 +59,9 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
       reader.onload = (event) => {
         try {
           const parsed = JSON.parse(event.target?.result as string);
+          if (parsed.coverLetterData && onImportCoverLetter) {
+            onImportCoverLetter(parsed.coverLetterData, parsed.coverLetterSettings);
+          }
           if (parsed.data && parsed.data.personalInfo) {
             onImport(parsed.data, parsed.settings);
             onClose();
@@ -57,7 +69,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
             onImport(parsed);
             onClose();
           } else {
-            setErrorMsg(isKm ? 'ទម្រង់ឯកសារ JSON មិនត្រឹមត្រូវ' : 'Invalid CV JSON format');
+            setErrorMsg(isKm ? 'ទម្រង់ឯកសារ JSON មិនត្រឹមត្រូវ' : 'Invalid JSON format');
           }
         } catch {
           setErrorMsg(isKm ? 'កំហុសក្នុងការអានឯកសារ' : 'Error parsing JSON file');
@@ -70,6 +82,9 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
   const handlePasteImport = () => {
     try {
       const parsed = JSON.parse(jsonInput);
+      if (parsed.coverLetterData && onImportCoverLetter) {
+        onImportCoverLetter(parsed.coverLetterData, parsed.coverLetterSettings);
+      }
       if (parsed.data && parsed.data.personalInfo) {
         onImport(parsed.data, parsed.settings);
         onClose();
@@ -77,7 +92,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
         onImport(parsed);
         onClose();
       } else {
-        setErrorMsg(isKm ? 'ទម្រង់ឯកសារមិនត្រឹមត្រូវ' : 'Invalid CV structure');
+        setErrorMsg(isKm ? 'ទម្រង់ឯកសារមិនត្រឹមត្រូវ' : 'Invalid structure');
       }
     } catch {
       setErrorMsg(isKm ? 'កំហុសក្នុងការ parse JSON' : 'JSON Syntax Error');
