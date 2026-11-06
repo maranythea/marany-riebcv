@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { User, SavedCv } from '../types/auth';
 import type { TemplateId, CvData, CvSettings } from '../types/cv';
+import type { CoverLetterTemplateId } from '../types/coverLetter';
 import { sampleProfiles } from '../data/sampleProfiles';
 import { triggerConfetti } from '../utils/pdfExport';
 
@@ -14,6 +15,8 @@ interface AuthContextType {
   logout: () => void;
   isTemplateUnlocked: (templateId: TemplateId) => boolean;
   unlockSingleTemplate: (templateId: TemplateId) => void;
+  isCoverLetterTemplateUnlocked: (templateId: CoverLetterTemplateId) => boolean;
+  unlockSingleCoverLetterTemplate: (templateId: CoverLetterTemplateId) => void;
   upgradeToLifetimePro: () => void;
   saveResume: (data: CvData, settings: CvSettings, title?: string, idToUpdate?: string) => string;
   loadResume: (id: string) => SavedCv | undefined;
@@ -31,6 +34,7 @@ const defaultGuestUser: User = {
   email: 'student@example.com',
   isPro: false,
   unlockedTemplates: ['phnom-penh-modern', 'emerald-minimal'],
+  unlockedCoverLetterTemplates: ['cl-phnom-penh-clean', 'cl-emerald-minimal'],
   plan: 'free',
   createdAt: new Date().toISOString(),
 };
@@ -108,6 +112,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       unlockedTemplates: isPro
         ? ['phnom-penh-modern', 'emerald-minimal', 'angkor-classic', 'creative-gradient', 'tech-compact']
         : ['phnom-penh-modern', 'emerald-minimal'],
+      unlockedCoverLetterTemplates: isPro
+        ? ['cl-phnom-penh-clean', 'cl-emerald-minimal', 'cl-angkor-gold', 'cl-creative-gradient', 'cl-executive-navy']
+        : ['cl-phnom-penh-clean', 'cl-emerald-minimal'],
       plan: isPro ? 'pro_lifetime' : 'free',
       createdAt: new Date().toISOString(),
     };
@@ -129,6 +136,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           'angkor-classic',
           'creative-gradient',
           'tech-compact',
+        ],
+        unlockedCoverLetterTemplates: [
+          'cl-phnom-penh-clean',
+          'cl-emerald-minimal',
+          'cl-angkor-gold',
+          'cl-creative-gradient',
+          'cl-executive-navy',
         ],
         plan: 'pro_lifetime',
         createdAt: new Date().toISOString(),
@@ -170,6 +184,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     triggerConfetti();
   };
 
+  const isCoverLetterTemplateUnlocked = (templateId: CoverLetterTemplateId): boolean => {
+    if (!currentUser) return ['cl-phnom-penh-clean', 'cl-emerald-minimal'].includes(templateId);
+    if (currentUser.isPro || currentUser.plan === 'pro_lifetime') return true;
+    const unlocked = currentUser.unlockedCoverLetterTemplates || ['cl-phnom-penh-clean', 'cl-emerald-minimal'];
+    return unlocked.includes(templateId);
+  };
+
+  const unlockSingleCoverLetterTemplate = (templateId: CoverLetterTemplateId) => {
+    if (!currentUser) {
+      login('guest@riebcv.com', 'New Member', false);
+    }
+    setCurrentUser((prev) => {
+      if (!prev) return prev;
+      const currentList = prev.unlockedCoverLetterTemplates || ['cl-phnom-penh-clean', 'cl-emerald-minimal'];
+      if (currentList.includes(templateId)) return prev;
+      return {
+        ...prev,
+        unlockedCoverLetterTemplates: [...currentList, templateId],
+      };
+    });
+    triggerConfetti();
+  };
+
   const upgradeToLifetimePro = () => {
     if (!currentUser) {
       login('pro.user@riebcv.com', 'Pro Member', true);
@@ -186,6 +223,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             'angkor-classic',
             'creative-gradient',
             'tech-compact',
+          ],
+          unlockedCoverLetterTemplates: [
+            'cl-phnom-penh-clean',
+            'cl-emerald-minimal',
+            'cl-angkor-gold',
+            'cl-creative-gradient',
+            'cl-executive-navy',
           ],
         };
       });
@@ -268,6 +312,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         isTemplateUnlocked,
         unlockSingleTemplate,
+        isCoverLetterTemplateUnlocked,
+        unlockSingleCoverLetterTemplate,
         upgradeToLifetimePro,
         saveResume,
         loadResume,
