@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { CvData, CvSettings, LanguageCode, TemplateId } from './types/cv';
+import type { CoverLetterData, CoverLetterSettings, CoverLetterTemplateId } from './types/coverLetter';
+import { defaultCoverLetterDataKm, defaultCoverLetterSettings, COVER_LETTER_TEMPLATES_CONFIG } from './types/coverLetter';
 import { sampleProfiles } from './data/sampleProfiles';
 import { translations } from './data/translations';
 import { exportCvToPdf } from './utils/pdfExport';
@@ -17,7 +19,10 @@ import { LanguagesEditor } from './components/EditorForm/LanguagesEditor';
 import { HonorsReferencesEditor } from './components/EditorForm/HonorsReferencesEditor';
 import { DesignCustomizer } from './components/EditorForm/DesignCustomizer';
 import { CvPreview } from './components/Preview/CvPreview';
+import { CoverLetterEditor } from './components/CoverLetter/CoverLetterEditor';
+import { CoverLetterPreview } from './components/CoverLetter/CoverLetterPreview';
 import { AiAssistantModal } from './components/Modals/AiAssistantModal';
+import { AiCoverLetterModal } from './components/Modals/AiCoverLetterModal';
 import { TipsModal } from './components/Modals/TipsModal';
 import { ImportExportModal } from './components/Modals/ImportExportModal';
 import { AuthModal } from './components/Auth/AuthModal';
@@ -29,6 +34,8 @@ import { Edit3, Eye, ArrowLeft, ArrowRight, Sparkles } from 'lucide-react';
 const STORAGE_DATA_KEY = 'marany_riebcv_data_v1';
 const STORAGE_SETTINGS_KEY = 'marany_riebcv_settings_v1';
 const STORAGE_THEME_KEY = 'marany_riebcv_theme_v1';
+const STORAGE_COVER_LETTER_DATA_KEY = 'marany_riebcv_cl_data_v1';
+const STORAGE_COVER_LETTER_SETTINGS_KEY = 'marany_riebcv_cl_settings_v1';
 
 const defaultSettings: CvSettings = {
   templateId: 'phnom-penh-modern',
@@ -42,7 +49,9 @@ const defaultSettings: CvSettings = {
 };
 
 function CvBuilderApp() {
-  const { loadResume, saveResume, activeResumeId, setActiveResumeId } = useAuth();
+  const { loadResume, saveResume, activeResumeId, setActiveResumeId, isCoverLetterTemplateUnlocked } = useAuth();
+
+  const [activeDocType, setActiveDocType] = useState<'cv' | 'cover-letter'>('cv');
 
   // Initialize from LocalStorage or default sample
   const [cvData, setCvData] = useState<CvData>(() => {
@@ -69,6 +78,30 @@ function CvBuilderApp() {
     return defaultSettings;
   });
 
+  const [coverLetterData, setCoverLetterData] = useState<CoverLetterData>(() => {
+    const saved = localStorage.getItem(STORAGE_COVER_LETTER_DATA_KEY);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Failed to parse saved cover letter data:', e);
+      }
+    }
+    return defaultCoverLetterDataKm;
+  });
+
+  const [coverLetterSettings, setCoverLetterSettings] = useState<CoverLetterSettings>(() => {
+    const saved = localStorage.getItem(STORAGE_COVER_LETTER_SETTINGS_KEY);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Failed to parse saved cover letter settings:', e);
+      }
+    }
+    return defaultCoverLetterSettings;
+  });
+
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem(STORAGE_THEME_KEY);
     return saved === 'dark' ? 'dark' : 'light';
@@ -79,6 +112,7 @@ function CvBuilderApp() {
 
   // Modals state
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [isAiCoverLetterModalOpen, setIsAiCoverLetterModalOpen] = useState(false);
   const [isTipsModalOpen, setIsTipsModalOpen] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -86,6 +120,7 @@ function CvBuilderApp() {
   const [isResumesModalOpen, setIsResumesModalOpen] = useState(false);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [upgradeTargetTemplate, setUpgradeTargetTemplate] = useState<TemplateId | undefined>();
+  const [upgradeTargetCoverLetterTemplate, setUpgradeTargetCoverLetterTemplate] = useState<CoverLetterTemplateId | undefined>();
 
   // Sync to theme attribute
   useEffect(() => {
@@ -108,12 +143,21 @@ function CvBuilderApp() {
     }
   }, [settings]);
 
+  useEffect(() => {
+    localStorage.setItem(STORAGE_COVER_LETTER_DATA_KEY, JSON.stringify(coverLetterData));
+  }, [coverLetterData]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_COVER_LETTER_SETTINGS_KEY, JSON.stringify(coverLetterSettings));
+  }, [coverLetterSettings]);
+
   const handleToggleTheme = () => {
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
 
   const handleUpdateLanguage = (lang: LanguageCode) => {
     setSettings((prev) => ({ ...prev, language: lang }));
+    setCoverLetterSettings((prev) => ({ ...prev, language: lang }));
   };
 
   const handleLoadSample = (sampleKey: string) => {
@@ -170,9 +214,32 @@ function CvBuilderApp() {
     handleCreateNewResume();
   };
 
+  const handleOpenUpgradeForTemplate = (templateId?: TemplateId) => {
+    setUpgradeTargetTemplate(templateId);
+    setUpgradeTargetCoverLetterTemplate(undefined);
+    setIsUpgradeModalOpen(true);
+  };
+
+  const handleOpenUpgradeForCoverLetterTemplate = (templateId?: CoverLetterTemplateId) => {
+    setUpgradeTargetCoverLetterTemplate(templateId);
+    setUpgradeTargetTemplate(undefined);
+    setIsUpgradeModalOpen(true);
+  };
+
   const handleDownloadPdf = async () => {
-    const safeName = cvData.personalInfo.fullName.trim().replace(/\s+/g, '_') || 'My_BacII_CV';
-    await exportCvToPdf('cv-a4-document', `${safeName}_CV.pdf`);
+    if (activeDocType === 'cover-letter') {
+      const isUnlocked = isCoverLetterTemplateUnlocked(coverLetterSettings.templateId);
+      const currentConfig = COVER_LETTER_TEMPLATES_CONFIG.find((t) => t.id === coverLetterSettings.templateId);
+      if (currentConfig?.isPro && !isUnlocked) {
+        handleOpenUpgradeForCoverLetterTemplate(coverLetterSettings.templateId);
+        return;
+      }
+      const safeName = coverLetterData.sender.fullName.trim().replace(/\s+/g, '_') || 'My_Cover_Letter';
+      await exportCvToPdf('cover-letter-a4-document', `${safeName}_Cover_Letter.pdf`);
+    } else {
+      const safeName = cvData.personalInfo.fullName.trim().replace(/\s+/g, '_') || 'My_BacII_CV';
+      await exportCvToPdf('cv-a4-document', `${safeName}_CV.pdf`);
+    }
   };
 
   const t = translations[settings.language];
@@ -201,11 +268,6 @@ function CvBuilderApp() {
     }
   };
 
-  const handleOpenUpgradeForTemplate = (templateId?: TemplateId) => {
-    setUpgradeTargetTemplate(templateId);
-    setIsUpgradeModalOpen(true);
-  };
-
   return (
     <div className="app-container">
       {/* Top Navigation */}
@@ -213,16 +275,28 @@ function CvBuilderApp() {
         data={cvData}
         settings={settings}
         theme={theme}
+        activeDocType={activeDocType}
+        onSelectDocType={setActiveDocType}
         onToggleTheme={handleToggleTheme}
         onUpdateLanguage={handleUpdateLanguage}
         onLoadSample={handleLoadSample}
-        onOpenAiModal={() => setIsAiModalOpen(true)}
+        onOpenAiModal={() => {
+          if (activeDocType === 'cover-letter') {
+            setIsAiCoverLetterModalOpen(true);
+          } else {
+            setIsAiModalOpen(true);
+          }
+        }}
         onOpenTipsModal={() => setIsTipsModalOpen(true)}
         onOpenSaveModal={() => setIsSaveModalOpen(true)}
         onOpenAuthModal={() => setIsAuthModalOpen(true)}
         onOpenAccountModal={() => setIsAccountModalOpen(true)}
         onOpenResumesModal={() => setIsResumesModalOpen(true)}
-        onOpenUpgradeModal={() => handleOpenUpgradeForTemplate()}
+        onOpenUpgradeModal={() =>
+          activeDocType === 'cover-letter'
+            ? handleOpenUpgradeForCoverLetterTemplate()
+            : handleOpenUpgradeForTemplate()
+        }
         onDownloadPdf={handleDownloadPdf}
       />
 
@@ -257,15 +331,28 @@ function CvBuilderApp() {
             display: mobileView === 'preview' && window.innerWidth <= 1024 ? 'none' : 'flex',
           }}
         >
-          {/* Sub Navigation Tabs */}
-          <TabNavigation
-            activeTab={activeTab}
-            language={settings.language}
-            onSelectTab={setActiveTab}
-          />
+          {activeDocType === 'cover-letter' ? (
+            <CoverLetterEditor
+              data={coverLetterData}
+              settings={coverLetterSettings}
+              cvData={cvData}
+              language={settings.language}
+              onChangeData={setCoverLetterData}
+              onChangeSettings={setCoverLetterSettings}
+              onOpenAiModal={() => setIsAiCoverLetterModalOpen(true)}
+              onOpenUpgradeModal={handleOpenUpgradeForCoverLetterTemplate}
+            />
+          ) : (
+            <>
+              {/* Sub Navigation Tabs */}
+              <TabNavigation
+                activeTab={activeTab}
+                language={settings.language}
+                onSelectTab={setActiveTab}
+              />
 
-          {/* Form Content Area */}
-          <div style={{ padding: '20px 24px', flex: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Form Content Area */}
+              <div className="form-content-area">
             {/* CV Strength Score Meter */}
             <CvStrengthMeter data={cvData} settings={settings} />
 
@@ -382,6 +469,8 @@ function CvBuilderApp() {
               )}
             </div>
           </div>
+          </>
+        )}
         </div>
 
         {/* Right Live Preview Panel */}
@@ -391,12 +480,20 @@ function CvBuilderApp() {
             display: mobileView === 'edit' && window.innerWidth <= 1024 ? 'none' : 'flex',
           }}
         >
-          <CvPreview
-            data={cvData}
-            settings={settings}
-            onOpenUpgradeModal={handleOpenUpgradeForTemplate}
-            onUpdateSettings={(updates) => setSettings((prev) => ({ ...prev, ...updates }))}
-          />
+          {activeDocType === 'cover-letter' ? (
+            <CoverLetterPreview
+              data={coverLetterData}
+              settings={coverLetterSettings}
+              onOpenUpgradeModal={handleOpenUpgradeForCoverLetterTemplate}
+            />
+          ) : (
+            <CvPreview
+              data={cvData}
+              settings={settings}
+              onOpenUpgradeModal={handleOpenUpgradeForTemplate}
+              onUpdateSettings={(updates) => setSettings((prev) => ({ ...prev, ...updates }))}
+            />
+          )}
         </div>
       </div>
 
@@ -413,6 +510,24 @@ function CvBuilderApp() {
             );
             setCvData((prev) => ({ ...prev, experiences: updated }));
           }
+        }}
+      />
+
+      <AiCoverLetterModal
+        isOpen={isAiCoverLetterModalOpen}
+        language={settings.language}
+        senderName={coverLetterData.sender.fullName || cvData.personalInfo.fullName}
+        senderKhmerName={coverLetterData.sender.khmerName || cvData.personalInfo.khmerName}
+        onClose={() => setIsAiCoverLetterModalOpen(false)}
+        onApplyCoverLetter={(updates) => {
+          setCoverLetterData((prev) => ({
+            ...prev,
+            ...updates,
+            recipient: {
+              ...prev.recipient,
+              ...(updates.recipient || {}),
+            },
+          }));
         }}
       />
 
@@ -460,6 +575,7 @@ function CvBuilderApp() {
         isOpen={isUpgradeModalOpen}
         language={settings.language}
         selectedTemplateId={upgradeTargetTemplate}
+        selectedCoverLetterTemplateId={upgradeTargetCoverLetterTemplate}
         onClose={() => setIsUpgradeModalOpen(false)}
       />
     </div>
