@@ -16,12 +16,16 @@ import {
   Crown,
   FolderOpen,
   LogIn,
+  Mail,
+  FileText,
 } from 'lucide-react';
 
 interface NavbarProps {
   data: CvData;
   settings: CvSettings;
   theme: 'light' | 'dark';
+  activeDocType: 'cv' | 'cover-letter';
+  onSelectDocType: (type: 'cv' | 'cover-letter') => void;
   onToggleTheme: () => void;
   onUpdateLanguage: (lang: LanguageCode) => void;
   onLoadSample: (sampleKey: string) => void;
@@ -38,6 +42,8 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({
   settings,
   theme,
+  activeDocType,
+  onSelectDocType,
   onToggleTheme,
   onUpdateLanguage,
   onLoadSample,
@@ -148,6 +154,74 @@ export const Navbar: React.FC<NavbarProps> = ({
             {isKm ? 'រៀបចំ CV ស្អាតកម្រិតវិជ្ជាជីវៈ សម្រាប់សិស្សបាក់ឌុប & ការងារដំបូង' : 'Smart CV Builder for Cambodian BacII & Entry-Level Job Seekers'}
           </div>
         </div>
+      </div>
+
+      {/* Mode Switcher: Resume vs Cover Letter */}
+      <div
+        style={{
+          display: 'flex',
+          backgroundColor: 'var(--bg-app)',
+          padding: '3px',
+          borderRadius: 'var(--radius-md)',
+          border: '1px solid var(--border-color)',
+          gap: '3px',
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => onSelectDocType('cv')}
+          style={{
+            padding: '5px 12px',
+            borderRadius: 'var(--radius-sm)',
+            fontSize: '0.8125rem',
+            fontWeight: activeDocType === 'cv' ? 700 : 500,
+            backgroundColor: activeDocType === 'cv' ? 'var(--primary)' : 'transparent',
+            color: activeDocType === 'cv' ? '#ffffff' : 'var(--text-secondary)',
+            border: 'none',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          <FileText size={14} />
+          <span>{isKm ? 'ប្រវត្តិរូប (CV)' : 'Resume (CV)'}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onSelectDocType('cover-letter')}
+          style={{
+            padding: '5px 12px',
+            borderRadius: 'var(--radius-sm)',
+            fontSize: '0.8125rem',
+            fontWeight: activeDocType === 'cover-letter' ? 700 : 500,
+            backgroundColor: activeDocType === 'cover-letter' ? 'var(--primary)' : 'transparent',
+            color: activeDocType === 'cover-letter' ? '#ffffff' : 'var(--text-secondary)',
+            border: 'none',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          <Mail size={14} />
+          <span>{isKm ? 'លិខិតអម (Cover Letter)' : 'Cover Letter'}</span>
+          <span
+            style={{
+              fontSize: '0.62rem',
+              backgroundColor: activeDocType === 'cover-letter' ? 'rgba(255,255,255,0.25)' : 'var(--primary)',
+              color: '#ffffff',
+              padding: '1px 6px',
+              borderRadius: '999px',
+              fontWeight: 800,
+            }}
+          >
+            AI ✨
+          </span>
+        </button>
       </div>
 
       {/* Center Actions / Shortcuts */}
@@ -491,7 +565,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           }}
         >
           <Download size={14} />
-          <span>{t.exportPdf}</span>
+          <span>
+            {activeDocType === 'cover-letter'
+              ? (isKm ? 'ទាញយកលិខិតអម PDF' : 'Download Letter PDF')
+              : t.exportPdf}
+          </span>
         </button>
       </div>
     </header>
