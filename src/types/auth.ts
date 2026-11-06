@@ -1,4 +1,5 @@
 import type { CvData, CvSettings, TemplateId } from './cv';
+import type { CoverLetterTemplateId } from './coverLetter';
 
 export interface User {
   id: string;
@@ -7,6 +8,7 @@ export interface User {
   avatar?: string;
   isPro: boolean;
   unlockedTemplates: TemplateId[];
+  unlockedCoverLetterTemplates?: CoverLetterTemplateId[];
   plan: 'free' | 'pro_lifetime' | 'pro_single';
   createdAt: string;
 }
