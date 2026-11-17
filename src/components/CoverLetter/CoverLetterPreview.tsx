@@ -7,6 +7,8 @@ import { EmeraldMinimalCoverLetter } from './templates/EmeraldMinimalCoverLetter
 import { AngkorGoldCoverLetter } from './templates/AngkorGoldCoverLetter';
 import { CreativeGradientCoverLetter } from './templates/CreativeGradientCoverLetter';
 import { ExecutiveNavyCoverLetter } from './templates/ExecutiveNavyCoverLetter';
+import { StudentClassicCoverLetter } from './templates/StudentClassicCoverLetter';
+import { FramedInternshipCoverLetter } from './templates/FramedInternshipCoverLetter';
 import { ZoomIn, ZoomOut, Download, Printer, Lock, Crown } from 'lucide-react';
 import { exportCvToPdf, printCv } from '../../utils/pdfExport';
 
@@ -30,14 +32,15 @@ export const CoverLetterPreview: React.FC<CoverLetterPreviewProps> = ({
   const currentConfig = COVER_LETTER_TEMPLATES_CONFIG.find((t) => t.id === settings.templateId) || COVER_LETTER_TEMPLATES_CONFIG[0];
   const isUnlocked = isCoverLetterTemplateUnlocked(settings.templateId);
 
-  // Auto fit zoom for screen size
+  // Auto fit zoom for screen size (desktop and mobile)
   useEffect(() => {
     const handleResize = () => {
       if (containerRef.current) {
-        const containerWidth = containerRef.current.clientWidth - 48;
+        const padding = window.innerWidth <= 640 ? 16 : 48;
+        const containerWidth = containerRef.current.clientWidth - padding;
         const a4WidthPx = 794;
         if (containerWidth < a4WidthPx) {
-          const autoScale = Math.max(0.45, Math.min(1, containerWidth / a4WidthPx));
+          const autoScale = Math.max(0.32, Math.min(1, containerWidth / a4WidthPx));
           setZoom(Number(autoScale.toFixed(2)));
         } else {
           setZoom(0.85);
@@ -67,6 +70,10 @@ export const CoverLetterPreview: React.FC<CoverLetterPreviewProps> = ({
 
   const renderTemplate = () => {
     switch (settings.templateId) {
+      case 'cl-student-classic':
+        return <StudentClassicCoverLetter data={data} settings={settings} />;
+      case 'cl-framed-internship':
+        return <FramedInternshipCoverLetter data={data} settings={settings} />;
       case 'cl-emerald-minimal':
         return <EmeraldMinimalCoverLetter data={data} settings={settings} />;
       case 'cl-angkor-gold':
