@@ -29,6 +29,8 @@ import { AuthModal } from './components/Auth/AuthModal';
 import { AccountModal } from './components/Account/AccountModal';
 import { MyResumesModal } from './components/Account/MyResumesModal';
 import { UpgradeModal } from './components/Pricing/UpgradeModal';
+import { PwaInstallModal } from './components/Modals/PwaInstallModal';
+import { MonetizationGuideModal } from './components/Modals/MonetizationGuideModal';
 import { Edit3, Eye, ArrowLeft, ArrowRight, Sparkles } from 'lucide-react';
 
 const STORAGE_DATA_KEY = 'marany_riebcv_data_v1';
@@ -119,6 +121,8 @@ function CvBuilderApp() {
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [isResumesModalOpen, setIsResumesModalOpen] = useState(false);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [isPwaInstallModalOpen, setIsPwaInstallModalOpen] = useState(false);
+  const [isMonetizationGuideModalOpen, setIsMonetizationGuideModalOpen] = useState(false);
   const [upgradeTargetTemplate, setUpgradeTargetTemplate] = useState<TemplateId | undefined>();
   const [upgradeTargetCoverLetterTemplate, setUpgradeTargetCoverLetterTemplate] = useState<CoverLetterTemplateId | undefined>();
 
@@ -297,6 +301,8 @@ function CvBuilderApp() {
             ? handleOpenUpgradeForCoverLetterTemplate()
             : handleOpenUpgradeForTemplate()
         }
+        onOpenPwaModal={() => setIsPwaInstallModalOpen(true)}
+        onOpenMonetizationGuide={() => setIsMonetizationGuideModalOpen(true)}
         onDownloadPdf={handleDownloadPdf}
       />
 
@@ -325,12 +331,7 @@ function CvBuilderApp() {
       {/* Main Workspace Area */}
       <div className="main-content">
         {/* Left Form Panel */}
-        <div
-          className="form-panel"
-          style={{
-            display: mobileView === 'preview' && window.innerWidth <= 1024 ? 'none' : 'flex',
-          }}
-        >
+        <div className={`form-panel ${mobileView === 'preview' ? 'mobile-hidden' : ''}`}>
           {activeDocType === 'cover-letter' ? (
             <CoverLetterEditor
               data={coverLetterData}
@@ -474,12 +475,7 @@ function CvBuilderApp() {
         </div>
 
         {/* Right Live Preview Panel */}
-        <div
-          className="preview-panel"
-          style={{
-            display: mobileView === 'edit' && window.innerWidth <= 1024 ? 'none' : 'flex',
-          }}
-        >
+        <div className={`preview-panel ${mobileView === 'edit' ? 'mobile-hidden' : ''}`}>
           {activeDocType === 'cover-letter' ? (
             <CoverLetterPreview
               data={coverLetterData}
@@ -577,6 +573,22 @@ function CvBuilderApp() {
         selectedTemplateId={upgradeTargetTemplate}
         selectedCoverLetterTemplateId={upgradeTargetCoverLetterTemplate}
         onClose={() => setIsUpgradeModalOpen(false)}
+      />
+
+      <PwaInstallModal
+        isOpen={isPwaInstallModalOpen}
+        language={settings.language}
+        onClose={() => setIsPwaInstallModalOpen(false)}
+      />
+
+      <MonetizationGuideModal
+        isOpen={isMonetizationGuideModalOpen}
+        language={settings.language}
+        onClose={() => setIsMonetizationGuideModalOpen(false)}
+        onOpenUpgradeModal={() => {
+          setIsMonetizationGuideModalOpen(false);
+          setIsUpgradeModalOpen(true);
+        }}
       />
     </div>
   );
