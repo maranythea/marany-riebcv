@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { LanguageCode, TemplateId } from '../../types/cv';
 import type { CoverLetterTemplateId } from '../../types/coverLetter';
 import { translations } from '../../data/translations';
 import { TEMPLATES_CONFIG } from '../../types/auth';
 import { COVER_LETTER_TEMPLATES_CONFIG } from '../../types/coverLetter';
 import { useAuth } from '../../context/AuthContext';
-import { Crown, Sparkles, X, Check, QrCode, CreditCard, Zap } from 'lucide-react';
+import { triggerConfetti } from '../../utils/pdfExport';
+import { Crown, Sparkles, X, Check, QrCode, CreditCard, Zap, Clock } from 'lucide-react';
 
 interface UpgradeModalProps {
   isOpen: boolean;
@@ -27,11 +28,28 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
   const [paymentMethod, setPaymentMethod] = useState<'khqr' | 'card'>('khqr');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes timer
 
   const t = translations[language].pricing;
   const isKm = language === 'km';
 
+  // Countdown timer for KHQR
+  useEffect(() => {
+    if (!isOpen) {
+      setTimeLeft(300);
+      return;
+    }
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 300));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isOpen]);
+
   if (!isOpen) return null;
+
+  const minutes = Math.floor(timeLeft / 60);
+  const seconds = timeLeft % 60;
+  const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
   const targetCvTemplate = TEMPLATES_CONFIG.find((t) => t.id === selectedTemplateId) || TEMPLATES_CONFIG[2];
   const targetClTemplate = COVER_LETTER_TEMPLATES_CONFIG.find((t) => t.id === selectedCoverLetterTemplateId);
@@ -49,10 +67,12 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
       }
       setIsProcessing(false);
       setIsSuccess(true);
+      triggerConfetti();
+
       setTimeout(() => {
         setIsSuccess(false);
         onClose();
-      }, 1600);
+      }, 1800);
     }, 1200);
   };
 
@@ -239,67 +259,195 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
                       padding: '16px',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '16px',
+                      gap: '18px',
                       boxShadow: 'var(--shadow-md)',
+                      flexWrap: 'wrap',
                     }}
                   >
-                    {/* Simulated KHQR Visual */}
+                    {/* Realistic KHQR Visual */}
                     <div
                       style={{
-                        width: '130px',
-                        height: '130px',
-                        backgroundColor: '#f8fafc',
-                        border: '1.5px solid #cbd5e1',
-                        borderRadius: '10px',
+                        width: '136px',
+                        backgroundColor: '#ffffff',
+                        border: '2px solid #e11d48',
+                        borderRadius: '12px',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        padding: '8px',
-                        position: 'relative',
+                        padding: '6px',
+                        boxShadow: '0 4px 10px rgba(225, 29, 72, 0.15)',
                         flexShrink: 0,
                       }}
                     >
+                      {/* KHQR Header Banner */}
                       <div
                         style={{
                           backgroundColor: '#e11d48',
                           color: '#ffffff',
                           fontWeight: 900,
-                          fontSize: '0.65rem',
-                          padding: '1px 6px',
+                          fontSize: '0.7rem',
+                          padding: '2px 14px',
                           borderRadius: '4px',
-                          letterSpacing: '0.05em',
-                          marginBottom: '4px',
+                          letterSpacing: '0.08em',
+                          marginBottom: '6px',
                         }}
                       >
                         KHQR
                       </div>
-                      {/* Stylized QR representation */}
-                      <div style={{ width: '80px', height: '80px', backgroundColor: '#0f172a', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '0.65rem', textAlign: 'center', padding: '4px' }}>
-                        SCAN WITH BANK APP
+
+                      {/* SVG QR Code Pattern with authentic corner registration */}
+                      <svg width="108" height="108" viewBox="0 0 100 100" style={{ display: 'block' }}>
+                        {/* Top-left finder */}
+                        <rect x="5" y="5" width="28" height="28" fill="#e11d48" rx="4" />
+                        <rect x="9" y="9" width="20" height="20" fill="#ffffff" rx="2" />
+                        <rect x="13" y="13" width="12" height="12" fill="#0f172a" rx="2" />
+
+                        {/* Top-right finder */}
+                        <rect x="67" y="5" width="28" height="28" fill="#e11d48" rx="4" />
+                        <rect x="71" y="9" width="20" height="20" fill="#ffffff" rx="2" />
+                        <rect x="75" y="13" width="12" height="12" fill="#0f172a" rx="2" />
+
+                        {/* Bottom-left finder */}
+                        <rect x="5" y="67" width="28" height="28" fill="#e11d48" rx="4" />
+                        <rect x="9" y="71" width="20" height="20" fill="#ffffff" rx="2" />
+                        <rect x="13" y="75" width="12" height="12" fill="#0f172a" rx="2" />
+
+                        {/* Data Modules (Stylized QR pixels) */}
+                        <rect x="38" y="10" width="6" height="6" fill="#0f172a" />
+                        <rect x="48" y="10" width="6" height="6" fill="#0f172a" />
+                        <rect x="38" y="20" width="6" height="6" fill="#0f172a" />
+                        <rect x="54" y="20" width="6" height="6" fill="#0f172a" />
+                        <rect x="44" y="28" width="6" height="6" fill="#0f172a" />
+
+                        <rect x="10" y="42" width="6" height="6" fill="#0f172a" />
+                        <rect x="22" y="42" width="6" height="6" fill="#0f172a" />
+                        <rect x="38" y="42" width="6" height="6" fill="#0f172a" />
+                        <rect x="48" y="42" width="6" height="6" fill="#0f172a" />
+                        <rect x="60" y="42" width="6" height="6" fill="#0f172a" />
+                        <rect x="72" y="42" width="6" height="6" fill="#0f172a" />
+                        <rect x="84" y="42" width="6" height="6" fill="#0f172a" />
+
+                        <rect x="16" y="52" width="6" height="6" fill="#0f172a" />
+                        <rect x="28" y="52" width="6" height="6" fill="#0f172a" />
+                        <rect x="44" y="52" width="12" height="12" fill="#e11d48" rx="2" />
+                        <rect x="66" y="52" width="6" height="6" fill="#0f172a" />
+                        <rect x="78" y="52" width="6" height="6" fill="#0f172a" />
+
+                        <rect x="38" y="68" width="6" height="6" fill="#0f172a" />
+                        <rect x="54" y="68" width="6" height="6" fill="#0f172a" />
+                        <rect x="70" y="68" width="6" height="6" fill="#0f172a" />
+                        <rect x="82" y="68" width="6" height="6" fill="#0f172a" />
+
+                        <rect x="44" y="80" width="6" height="6" fill="#0f172a" />
+                        <rect x="60" y="80" width="6" height="6" fill="#0f172a" />
+                        <rect x="76" y="80" width="6" height="6" fill="#0f172a" />
+                        <rect x="88" y="80" width="6" height="6" fill="#0f172a" />
+                      </svg>
+
+                      {/* Small Bakong Logo icon */}
+                      <div
+                        style={{
+                          fontSize: '0.62rem',
+                          fontWeight: 700,
+                          color: '#64748b',
+                          marginTop: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '3px',
+                        }}
+                      >
+                        <span>Bakong Pay</span>
                       </div>
                     </div>
 
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ backgroundColor: '#e11d48', color: '#fff', fontSize: '0.72rem', fontWeight: 800, padding: '2px 6px', borderRadius: '4px' }}>
+                    {/* KHQR Info & Countdown */}
+                    <div style={{ flex: 1, minWidth: '220px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                        <span
+                          style={{
+                            backgroundColor: '#e11d48',
+                            color: '#fff',
+                            fontSize: '0.68rem',
+                            fontWeight: 800,
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                          }}
+                        >
                           BAKONG
                         </span>
-                        <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0f172a' }}>
+                        <span style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f172a' }}>
                           Marany RiebCV (Official)
                         </span>
                       </div>
-                      <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#e11d48', margin: '4px 0' }}>
+
+                      <div style={{ fontSize: '1.35rem', fontWeight: 900, color: '#e11d48', margin: '2px 0' }}>
                         {purchaseType === 'lifetime' ? '$4.99 (20,000 KHR)' : '$1.99 (8,000 KHR)'}
                       </div>
-                      <p style={{ margin: 0, fontSize: '0.76rem', color: '#475569', lineHeight: 1.4 }}>
+
+                      {/* Live Countdown Badge */}
+                      <div
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          backgroundColor: '#fef2f2',
+                          color: '#991b1b',
+                          border: '1px solid #fecaca',
+                          borderRadius: '6px',
+                          padding: '3px 8px',
+                          fontSize: '0.74rem',
+                          fontWeight: 700,
+                          margin: '4px 0 8px 0',
+                        }}
+                      >
+                        <Clock size={12} />
+                        <span>{isKm ? `សុពលភាពកូដ៖ ${formattedTime}` : `Expires in: ${formattedTime}`}</span>
+                      </div>
+
+                      <p style={{ margin: 0, fontSize: '0.76rem', color: '#475569', lineHeight: 1.45 }}>
                         {t.khqrHint}
                       </p>
+
+                      {/* Supported Bank Badges */}
+                      <div style={{ display: 'flex', gap: '5px', marginTop: '8px', flexWrap: 'wrap' }}>
+                        {['ABA', 'Bakong', 'Wing', 'ACLEDA', 'Canadia'].map((bank) => (
+                          <span
+                            key={bank}
+                            style={{
+                              backgroundColor: '#f1f5f9',
+                              color: '#334155',
+                              fontSize: '0.66rem',
+                              fontWeight: 700,
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              border: '1px solid #e2e8f0',
+                            }}
+                          >
+                            {bank}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 ) : (
-                  <div style={{ backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <input type="text" className="form-input" placeholder="Card Number (•••• •••• •••• ••••)" defaultValue="4242 •••• •••• 4242" />
+                  <div
+                    style={{
+                      backgroundColor: 'var(--bg-app)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '10px',
+                    }}
+                  >
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Card Number (•••• •••• •••• ••••)"
+                      defaultValue="4242 •••• •••• 4242"
+                    />
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                       <input type="text" className="form-input" placeholder="MM / YY" defaultValue="12/28" />
                       <input type="text" className="form-input" placeholder="CVC" defaultValue="123" />
@@ -322,10 +470,11 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
                   padding: '12px',
                   boxShadow: '0 6px 18px rgba(245, 158, 11, 0.35)',
                   border: 'none',
+                  cursor: isProcessing ? 'wait' : 'pointer',
                 }}
               >
                 {isProcessing ? (
-                  <span>Processing KHQR Verification...</span>
+                  <span>{isKm ? 'កំពុងផ្ទៀងផ្ទាត់ការទូទាត់ KHQR...' : 'Processing KHQR Verification...'}</span>
                 ) : (
                   <>
                     <Sparkles size={16} />
