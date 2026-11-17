@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { CoverLetterData, CoverLetterSettings, CoverLetterTemplateId } from '../../types/coverLetter';
-import { COVER_LETTER_TEMPLATES_CONFIG } from '../../types/coverLetter';
+import { COVER_LETTER_TEMPLATES_CONFIG, COVER_LETTER_SAMPLES } from '../../types/coverLetter';
 import type { CvData, LanguageCode } from '../../types/cv';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -14,6 +14,8 @@ import {
   Lock,
   Check,
   CheckCircle,
+  Layers,
+  Eye,
 } from 'lucide-react';
 import { triggerConfetti } from '../../utils/pdfExport';
 
@@ -41,6 +43,18 @@ export const CoverLetterEditor: React.FC<CoverLetterEditorProps> = ({
   const [activeSection, setActiveSection] = useState<'details' | 'body' | 'theme'>('details');
   const { isCoverLetterTemplateUnlocked } = useAuth();
   const isKm = language === 'km';
+
+  const handleLoadSample = (sampleId: string) => {
+    const sample = COVER_LETTER_SAMPLES.find((s) => s.id === sampleId);
+    if (sample) {
+      onChangeData(() => sample.data);
+      onChangeSettings((prev) => ({
+        ...prev,
+        templateId: sample.templateId,
+      }));
+      triggerConfetti();
+    }
+  };
 
   const handleAutofillFromCv = () => {
     onChangeData((prev) => ({
@@ -149,6 +163,48 @@ export const CoverLetterEditor: React.FC<CoverLetterEditorProps> = ({
             <span>{isKm ? '✨ AI ជួយសរសេរ' : '✨ AI Assistant'}</span>
           </button>
         </div>
+      </div>
+
+      {/* Real Cover Letter Samples Bar */}
+      <div
+        style={{
+          padding: '8px 16px',
+          backgroundColor: 'var(--bg-app)',
+          borderBottom: '1px solid var(--border-color)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          overflowX: 'auto',
+          whiteSpace: 'nowrap',
+          scrollbarWidth: 'none',
+        }}
+      >
+        <span style={{ fontSize: '0.76rem', fontWeight: 700, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <Layers size={13} color="var(--primary)" />
+          {isKm ? 'គំរូលិខិតជាក់ស្ដែង:' : 'Sample Templates:'}
+        </span>
+
+        {COVER_LETTER_SAMPLES.map((sample) => (
+          <button
+            key={sample.id}
+            type="button"
+            onClick={() => handleLoadSample(sample.id)}
+            className="btn btn-secondary btn-sm"
+            style={{
+              fontSize: '0.74rem',
+              padding: '3px 10px',
+              borderRadius: '999px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              fontWeight: 600,
+            }}
+            title={`Load ${sample.nameEn}`}
+          >
+            <Eye size={11} color="var(--primary)" />
+            <span>{isKm ? sample.nameKm : sample.nameEn}</span>
+          </button>
+        ))}
       </div>
 
       {/* Editor Content Area */}
@@ -550,10 +606,25 @@ export const CoverLetterEditor: React.FC<CoverLetterEditorProps> = ({
                         </div>
                       </div>
 
-                      <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const matching = COVER_LETTER_SAMPLES.find((s) => s.templateId === tpl.id) || COVER_LETTER_SAMPLES[0];
+                            handleLoadSample(matching.id);
+                          }}
+                          className="btn btn-secondary btn-sm"
+                          style={{ fontSize: '0.72rem', padding: '3px 8px', borderRadius: '6px' }}
+                          title="Preview this template with realistic sample data"
+                        >
+                          <Eye size={12} />
+                          <span>{isKm ? 'មើលគំរូ' : 'Sample'}</span>
+                        </button>
+
                         {tpl.isPro && !isUnlocked ? (
                           <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.78rem', color: '#f59e0b', fontWeight: 700 }}>
-                            <Lock size={14} /> {isKm ? 'ដោះសោ' : 'Unlock ($1.99)'}
+                            <Lock size={14} /> {isKm ? 'ដោះសោ' : 'Unlock'}
                           </span>
                         ) : isSelected ? (
                           <CheckCircle size={18} color="var(--primary)" />
