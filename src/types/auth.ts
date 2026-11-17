@@ -5,12 +5,14 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  password?: string;
   avatar?: string;
   isPro: boolean;
   unlockedTemplates: TemplateId[];
   unlockedCoverLetterTemplates?: CoverLetterTemplateId[];
   plan: 'free' | 'pro_lifetime' | 'pro_single';
   createdAt: string;
+  lastLoginAt?: string;
 }
 
 export interface SavedCv {
