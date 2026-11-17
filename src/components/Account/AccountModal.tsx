@@ -289,8 +289,8 @@ export const AccountModal: React.FC<AccountModalProps> = ({
                     ? 'អ្នកអាចប្រើប្រាស់ម៉ូដ CV ពិសេសទាំងអស់ និងរក្សាទុក CV មិនកំណត់'
                     : 'Unlimited access to all premium templates & saved resumes'
                   : isKm
-                    ? 'គាំទ្រម៉ូដស្តង់ដារឥតគិតថ្លៃ និងលិខិតអមឥតគិតថ្លៃទាំងអស់'
-                    : 'Includes free standard templates & free Cover Letter tools'}
+                  ? 'គាំទ្រម៉ូដស្តង់ដារឥតគិតថ្លៃ និងលិខិតអមឥតគិតថ្លៃទាំងអស់'
+                  : 'Includes free standard templates & free Cover Letter tools'}
               </div>
             </div>
 
