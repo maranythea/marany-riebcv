@@ -18,6 +18,8 @@ import {
   LogIn,
   Mail,
   FileText,
+  Smartphone,
+  TrendingUp,
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -36,6 +38,8 @@ interface NavbarProps {
   onOpenAccountModal: () => void;
   onOpenResumesModal: () => void;
   onOpenUpgradeModal: () => void;
+  onOpenPwaModal?: () => void;
+  onOpenMonetizationGuide?: () => void;
   onDownloadPdf: () => void;
 }
 
@@ -54,6 +58,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAccountModal,
   onOpenResumesModal,
   onOpenUpgradeModal,
+  onOpenPwaModal,
+  onOpenMonetizationGuide,
   onDownloadPdf,
 }) => {
   const [sampleDropdownOpen, setSampleDropdownOpen] = useState(false);
@@ -341,6 +347,44 @@ export const Navbar: React.FC<NavbarProps> = ({
           <Save size={14} />
           <span>{t.saveData}</span>
         </button>
+
+        {/* PWA Install Button */}
+        {onOpenPwaModal && (
+          <button
+            type="button"
+            onClick={onOpenPwaModal}
+            className="btn btn-secondary btn-sm"
+            style={{
+              fontWeight: 600,
+              borderColor: 'rgba(37, 99, 235, 0.3)',
+              backgroundColor: 'rgba(37, 99, 235, 0.05)',
+              color: 'var(--primary)',
+            }}
+            title={isKm ? 'ដំឡើង App លើទូរស័ព្ទ / កុំព្យូទ័រ' : 'Install PWA on Phone / Desktop'}
+          >
+            <Smartphone size={14} />
+            <span>{isKm ? '📲 ដំឡើង App' : '📲 Install App'}</span>
+          </button>
+        )}
+
+        {/* Monetization / Phase 3 Playbook Guide */}
+        {onOpenMonetizationGuide && (
+          <button
+            type="button"
+            onClick={onOpenMonetizationGuide}
+            className="btn btn-secondary btn-sm"
+            style={{
+              fontWeight: 600,
+              borderColor: 'rgba(16, 185, 129, 0.3)',
+              backgroundColor: 'rgba(16, 185, 129, 0.05)',
+              color: '#059669',
+            }}
+            title={isKm ? 'យុទ្ធសាស្ត្ររកចំណូល & KHQR' : 'Phase 3: Monetization & KHQR Playbook'}
+          >
+            <TrendingUp size={14} />
+            <span>{isKm ? 'រកចំណូល' : 'Monetize'}</span>
+          </button>
+        )}
 
         {/* Upgrade / Unlock Button if not pro */}
         {!isPro && (
