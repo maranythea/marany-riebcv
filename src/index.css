@@ -177,6 +177,35 @@ body {
     width: 100%;
     padding: 16px 8px;
   }
+  .form-panel.mobile-hidden,
+  .preview-panel.mobile-hidden {
+    display: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-header {
+    padding: 8px 12px !important;
+    gap: 8px !important;
+  }
+  .form-content-area {
+    padding: 12px 10px !important;
+    gap: 12px !important;
+  }
+  .card {
+    padding: 14px 12px !important;
+  }
+  /* Collapse 2-column grids on mobile phones */
+  .grid-2-col, [style*="grid-template-columns: 1fr 1fr"], [style*="grid-template-columns: 1.2fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+  .preview-panel {
+    padding: 12px 4px !important;
+  }
+  .preview-toolbar {
+    padding: 6px 12px !important;
+    gap: 6px !important;
+  }
 }
 
 /* Tab Navigation Bar */
