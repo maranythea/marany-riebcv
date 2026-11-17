@@ -33,14 +33,15 @@ export const CvPreview: React.FC<CvPreviewProps> = ({
   const currentTplConfig = TEMPLATES_CONFIG.find((t) => t.id === settings.templateId) || TEMPLATES_CONFIG[0];
   const isUnlocked = isTemplateUnlocked(settings.templateId);
 
-  // Auto fit zoom on mount for desktop
+  // Auto fit zoom on mount for desktop and mobile
   useEffect(() => {
     const handleResize = () => {
       if (previewContainerRef.current) {
-        const containerWidth = previewContainerRef.current.clientWidth - 48;
+        const padding = window.innerWidth <= 640 ? 16 : 48;
+        const containerWidth = previewContainerRef.current.clientWidth - padding;
         const a4WidthPx = 794;
         if (containerWidth < a4WidthPx) {
-          const autoScale = Math.max(0.45, Math.min(1, containerWidth / a4WidthPx));
+          const autoScale = Math.max(0.32, Math.min(1, containerWidth / a4WidthPx));
           setZoom(Number(autoScale.toFixed(2)));
         } else {
           setZoom(0.85);
