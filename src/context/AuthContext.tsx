@@ -184,11 +184,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     triggerConfetti();
   };
 
-  const isCoverLetterTemplateUnlocked = (templateId: CoverLetterTemplateId): boolean => {
-    if (!currentUser) return ['cl-phnom-penh-clean', 'cl-emerald-minimal'].includes(templateId);
-    if (currentUser.isPro || currentUser.plan === 'pro_lifetime') return true;
-    const unlocked = currentUser.unlockedCoverLetterTemplates || ['cl-phnom-penh-clean', 'cl-emerald-minimal'];
-    return unlocked.includes(templateId);
+  const isCoverLetterTemplateUnlocked = (_templateId: CoverLetterTemplateId): boolean => {
+    return true; // All Cover Letter templates are completely free!
   };
 
   const unlockSingleCoverLetterTemplate = (templateId: CoverLetterTemplateId) => {
